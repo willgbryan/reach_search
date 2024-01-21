@@ -5,7 +5,7 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.chat_models import ChatOpenAI
 
 
-class search_web():
+class search_videos():
     def __init__ (
             self,
             llm: str,
