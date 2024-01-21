@@ -26,15 +26,18 @@ class search_web():
             num_results=10,
             )
 
+        # response quality can be significantly increased by following the sources provided 
+        # and scraping out the text to pass to the agent, currently all we pass is the 
+        # 'snippet' value from th raw_results response
         agent = create_openai_tools_agent(self.llm, tools, self.role_preprompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
         raw_search = SearxSearchWrapper(searx_host=self.host)
-        raw_results = raw_search.results(self.prompt, num_results = 5)
-        print(raw_results)
+        raw_results = raw_search.results(self.prompt, num_results = 5, engines=['google'])
+        print(f'Web engine output: {raw_results}')
 
         results = agent_executor.invoke(
-            {"input": f'Answer the following: {self.prompt}. Your responses should be grounded in {raw_results} and cite your sources. If you dont know the answer just say you dont know.'}
+            {"input": f'Answer the following: {self.prompt}. Use the following information to generate your answer: {raw_results}. IMPORTANT: Cite your sources. If you dont know the answer just say you dont know.'}
         )
 
         return results
