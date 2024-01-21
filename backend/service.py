@@ -8,7 +8,7 @@ from backend.web import search_web as search_web
 app = Flask(__name__)
 CORS(app)
 
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "redact"
 os.environ["SEARX_HOST"] = "http://localhost:8080"
 
 @app.route('/search', methods=['POST'])
