@@ -75,7 +75,7 @@ function App() {
         />
         <button
           type="submit"
-          className="text-white font-bold py-2 px-4 rounded ml-2 font-libre" // Added margin-left and font class
+          className="text-white font-bold py-2 px-4 rounded ml-2 text-lg font-libre" // Increased font size, added margin-left and font class
           style={{ backgroundColor: '#ff7300' }} // Inline style for button color
         >
           Search
