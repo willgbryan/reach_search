@@ -31,9 +31,10 @@ class search_web():
 
         raw_search = SearxSearchWrapper(searx_host=self.host)
         raw_results = raw_search.results(self.prompt, num_results = 5)
+        print(raw_results)
 
         results = agent_executor.invoke(
-            {"input": f'Answer the following: {self.prompt}. Ground your results in {raw_results} and cite your sources. If you dont know the answer just say you dont know.'}
+            {"input": f'Answer the following: {self.prompt}. Your responses should be grounded in {raw_results} and cite your sources. If you dont know the answer just say you dont know.'}
         )
 
         return results

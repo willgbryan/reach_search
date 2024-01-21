@@ -1,11 +1,10 @@
 import os
-from typing import Any
+import requests
+from bs4 import BeautifulSoup
 from langchain import hub
 from langchain.agents import load_tools
-from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.chat_models import ChatOpenAI
 from langchain_community.utilities import SearxSearchWrapper
-
 
 class search_images():
     def __init__(self, llm: str, prompt: str):
@@ -15,20 +14,32 @@ class search_images():
         self.api_key = os.environ["OPENAI_API_KEY"]
         self.host = os.environ["SEARX_HOST"]
 
+    def extract_image_url(self, page_url):
+        response = requests.get(page_url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            og_image = soup.find('meta', property='og:image')
+            if og_image:
+                return og_image['content']
+        return None  # Fallback if no image is found
+
     def main(self):
-        tools = load_tools(
-            ["searx-search-results-json"], 
-            searx_host="http://localhost:8080",
-            engines=["google_images"],
-            num_results=10,
-        )
-        
-        # agent = create_openai_tools_agent(self.llm, tools, self.role_preprompt)
-        # agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=False)
-
-        # agent_response = agent_executor.invoke({'input': self.prompt})
         raw_search = SearxSearchWrapper(searx_host=self.host, engines=["google_images"])
-        raw_results = raw_search.results(self.prompt, num_results = 5)
+        raw_results = raw_search.results(
+            self.prompt, 
+            num_results=5, 
+            image_proxy=True, 
+            engines=["google images"]
+        )
+        print(f'Raw output from engine: {raw_results}')
+        results_with_images = []
+        for result in raw_results:
+            image_url = self.extract_image_url(result['link'])
+            if image_url:
+                results_with_images.append({
+                    'pageUrl': result['link'],
+                    'imageUrl': image_url
+                })
 
-        print(raw_results)
-        return raw_results
+        print(results_with_images)
+        return results_with_images
