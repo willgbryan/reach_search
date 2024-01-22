@@ -6,6 +6,29 @@ function App() {
   const [results, setResults] = useState({ videos: [], images: [], web: [] });
   const [isSearchComplete, setIsSearchComplete] = useState(false);
 
+  const handleFileChange = (event) => {
+    if (event.target.files.length) {
+      const formData = new FormData();
+      for (const file of event.target.files) {
+        formData.append('files', file);
+      }
+
+      fetch('http://localhost:5000/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data.message);
+        // You can set state here if you want to show a message or update the UI
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        // Handle errors here, such as updating the UI to show an error message
+      });
+    }
+  };
+
   useEffect(() => {
     if (inputRef.current) {
       const minWidth = 200;
@@ -51,7 +74,8 @@ function App() {
       setResults({
         videos: data.videos ? [data.videos.output] : [],
         images: data.images ? data.images : [], // Expecting objects with pageUrl and imageUrl
-        web: data.web ? data.web : {}
+        web: data.web ? data.web : {},
+        pdf: data.pdf || ""
       });
       setIsSearchComplete(true);
     })
@@ -80,26 +104,43 @@ function App() {
         >
           Search
         </button>
+        <input
+      type="file"
+      webkitdirectory="true"
+      directory="true"
+      multiple
+      onChange={handleFileChange}
+      className=" h-10 px-5 rounded-lg text-sm focus:outline-none my-2"
+      />
       </form>
       {isSearchComplete && (
-        <div className="flex -mx-4">
-          <div className="w-1/2 px-4">
-            <h2 className="text-3xl font-bold mb-4 font-libre">Web</h2> {/* Increased margin-bottom and font class */}
-            <div dangerouslySetInnerHTML={{ __html: results.web.output }} className="mb-8" /> {/* Increased margin-bottom */}
-            <div className="grid grid-cols-2 gap-4">
+      <div className="flex flex-wrap -mx-4">
+        {/* Left column for Web and PDF results */}
+        <div className="w-full lg:w-1/2 px-4">
+          {/* Web results */}
+          <div className="mb-8"> {/* Existing margin-bottom */}
+            <h2 className="text-3xl font-bold mb-4 font-libre">Web</h2>
+            {/* need to change how the web output is rendered */}
+            <div dangerouslySetInnerHTML={{ __html: results.web.output }} />
+            <div className="grid grid-cols-2 gap-4 mb-16"> {/* Increased margin-bottom */}
               {results.web.links && results.web.links.map((link, index) => (
-                <a
-                  key={index}
-                  href={link.linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="border p-2 rounded hover:bg-gray-100"
-                >
+                <a key={index} href={link.linkUrl} target="_blank" rel="noopener noreferrer" className="border p-2 rounded hover:bg-gray-100">
                   Source {index + 1}: {link.linkText}
                 </a>
               ))}
             </div>
           </div>
+          {/* PDF results */}
+          {typeof results.pdf === 'string' && results.pdf && (
+            <div>
+              <h2 className="text-3xl font-bold mb-4 font-libre">PDF Search Results</h2>
+              <div className="border p-2 rounded hover:bg-gray-100">
+                {results.pdf}
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Right column for Image results */}
           <div className="w-1/2 px-4">
             <h2 className="text-3xl font-bold mb-4 font-libre">Images</h2> {/* Increased margin-bottom and font class */}
             <div className="grid grid-cols-2 gap-4">
