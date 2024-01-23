@@ -13,7 +13,7 @@ function App() {
         formData.append('files', file);
       }
 
-      fetch('http://localhost:5000/upload', {
+      fetch('http://localhost:8000/upload', {
         method: 'POST',
         body: formData
       })
@@ -57,7 +57,7 @@ function App() {
   const performSearch = (event) => {
     event.preventDefault();
     setIsSearchComplete(false);
-    fetch('http://localhost:5000/search', {
+    fetch('http://localhost:8000/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
