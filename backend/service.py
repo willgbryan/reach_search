@@ -6,8 +6,7 @@ from backend.videos import search_videos as search_videos
 from backend.images import search_images as search_images
 from backend.web import search_web as search_web
 from backend.search_pdfs import search_pdfs as search_pdfs
-from fastapi.staticfiles import StaticFiles
-from starlette.responses import FileResponse
+
 import logging
 from typing import List
 

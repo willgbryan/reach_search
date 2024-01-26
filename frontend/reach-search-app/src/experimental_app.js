@@ -2,9 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 
 function App() {
   const [query, setQuery] = useState('');
-  const inputRef = useRef(null);
   const [results, setResults] = useState({ videos: [], images: [], web: [] });
+  const [searchBoxes, setSearchBoxes] = useState([]);
+  const [globalResults, setGlobalResults] = useState({ videos: [], images: [], web: [] });
   const [isSearchComplete, setIsSearchComplete] = useState(false);
+  const inputRef = useRef(null);
 
   const handleFileChange = (event) => {
     if (event.target.files.length) {
@@ -38,7 +40,7 @@ function App() {
   }, [query]);
 
   const parseWebResults = (text) => {
-    const linkRegex = /(?:\[(.*?)\]\((https?:\/\/.*?)\))/g;
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g;
     let match;
     const links = [];
     let index = 1;
@@ -47,16 +49,9 @@ function App() {
     while ((match = linkRegex.exec(text)) !== null) {
       const [fullMatch, linkText, linkUrl] = match;
       links.push({ linkText, linkUrl });
-      const linkPlaceholder = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${index}</a>`;
-      parsedText = parsedText.replace(fullMatch, linkPlaceholder);
+      parsedText = parsedText.replace(fullMatch, `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${index}</a>`);
       index++;
     }
-
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    parsedText = parsedText.replace(urlRegex, (url) => {
-      const linkPlaceholder = `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-      return linkPlaceholder;
-    });
 
     return { parsedText, links };
   };
@@ -80,7 +75,7 @@ function App() {
       }
       setResults({
         videos: data.videos ? [data.videos.output] : [],
-        images: data.images ? data.images : [], 
+        images: data.images ? data.images : [], // Expecting objects with pageUrl and imageUrl
         web: data.web ? data.web : {},
         pdf: data.pdf || ""
       });
@@ -91,9 +86,62 @@ function App() {
       setIsSearchComplete(false);
     });
   };
+  const addSearchBox = (e) => {
+    console.log('Page clicked'); // Debugging line to check if the page is clicked
+    if (e.target === e.currentTarget) {
+      console.log('Adding search box'); // Debugging line to check if this code block is executed
+      const newBox = {
+        id: Date.now(),
+        x: e.clientX - 20, // Adjust as needed for styling
+        y: e.clientY - 10, // Adjust as needed for styling
+        query: '',
+        results: null
+      };
+      setSearchBoxes(searchBoxes.concat(newBox));
+    }
+  };
+
+  const updateQuery = (id, value) => {
+    setSearchBoxes(searchBoxes.map(box => box.id === id ? { ...box, query: value } : box));
+  };
+
+  const performDynamicSearch = (id, query) => {
+    // Similar to performSearch but updates the specific search box's results
+    fetch('http://localhost:8000/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt: query })
+    })
+    .then(response => response.json())
+    .then(data => {
+      setSearchBoxes(searchBoxes.map(box => {
+        if (box.id === id) {
+          return { ...box, results: data };
+        }
+        return box;
+      }));
+      setIsSearchComplete(true);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      setIsSearchComplete(false);
+    });
+  };
+
+  const handleKeyDown = (e, id) => {
+    if (e.key === 'Enter') {
+      performDynamicSearch(id, e.target.value);
+    }
+  };
+
+  const removeSearchBox = (id) => {
+    setSearchBoxes(searchBoxes.filter(box => box.id !== id));
+  };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4" onClick={addSearchBox} style={{ minHeight: '100vh' }}>
       <form onSubmit={performSearch} className="flex justify-center items-center mb-8">
         <input
           ref={inputRef}
@@ -120,6 +168,26 @@ function App() {
       className=" h-10 px-5 rounded-lg text-sm focus:outline-none my-2"
       />
       </form>
+      {/* Dynamic search boxes */}
+      {searchBoxes.map(box => (
+        <div key={box.id} style={{ position: 'absolute', left: box.x, top: box.y }}>
+          <input
+            type="text"
+            value={box.query}
+            onChange={(e) => updateQuery(box.id, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(e, box.id)}
+            placeholder="Type and press enter..."
+          />
+          <button onClick={() => removeSearchBox(box.id)}>X</button>
+          {box.results && (
+            <div>
+              {/* Render search results for this box */}
+              {/* You will need to adapt this part to match your data structure and desired UI */}
+              <div dangerouslySetInnerHTML={{ __html: box.results.web.output }} />
+            </div>
+          )}
+        </div>
+      ))}
       {isSearchComplete && (
       <div className="flex flex-wrap -mx-4">
         {/* Left column for Web and PDF results */}

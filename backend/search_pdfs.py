@@ -3,13 +3,8 @@ import json
 import chromadb
 import pandas as pd
 from openai import OpenAI
-from langchain import hub
-from typing import Any, List, Dict
+from .utils import send_request_to_gpt
 from langchain.document_loaders import PyPDFLoader
-from langchain.agents import load_tools
-from langchain.agents import AgentExecutor, create_openai_tools_agent
-from langchain_community.chat_models import ChatOpenAI
-from langchain_community.utilities import SearxSearchWrapper
 
 
 class search_pdfs:
@@ -19,51 +14,10 @@ class search_pdfs:
             llm: str,
             prompt: str,    
         ):
-        self.llm = ChatOpenAI(model=llm, temperature=0)
         self.prompt = prompt
         self.role_preprompt = "You are a search assistant that takes a user question and search data to produce a meaningful answer."
         self.collection_name = collection_name
         self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
-
-    def send_request_to_gpt(
-            self,
-            role_preprompt: str, 
-            prompt: str,
-            context: Dict[str, str],  
-            stream: bool = False
-            ) -> (Any | List | Dict):
-
-        if isinstance(context, str):
-            context = [{"role": "user", "content": context}]
-
-        response = self.client.chat.completions.create(
-            model="gpt-4-1106-preview",
-            messages=[
-                {
-                    "role": "system",
-                    "content": role_preprompt,
-                },
-                *context,
-                {
-                    "role": "user",
-                    "content": prompt,
-                },
-            ],
-            stream=stream,
-        )
-        return response
-
-    def extract_content_from_gpt_response(self, response: Any) -> str:
-        """
-        Extracts content from a GPT response.
-
-        Parameters:
-        response (Any): The GPT response to extract content from.
-
-        Returns:
-        str: Extracted content.
-        """
-        return response.choices[0].message.content
 
     def get_embedding(self, text, model="text-embedding-ada-002"):
         return self.client.embeddings.create(input = [text], model=model).data[0].embedding
@@ -167,14 +121,13 @@ class search_pdfs:
         
         print(f'PDF search results: {context_friendly_results}')
 
-        query_interpretation = self.send_request_to_gpt(
+        return_response = send_request_to_gpt(
             role_preprompt=self.role_preprompt,
             prompt=f'Answer the following: {self.prompt}. Use the following information to generate your answer: {context_friendly_results}. IMPORTANT: Cite your sources. If you dont know the answer just say you dont know.',
             context=[{'role': 'user', 'content': context_friendly_results}],
             stream=False,
             )
 
-        return_response = self.extract_content_from_gpt_response(query_interpretation)
         print(f'Search response: {return_response}')
 
         return return_response
