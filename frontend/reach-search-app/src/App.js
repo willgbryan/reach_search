@@ -38,6 +38,7 @@ function App() {
   }, [query]);
 
   const parseWebResults = (text) => {
+    text = text || '';
     const linkRegex = /(?:\[(.*?)\]\((https?:\/\/.*?)\))/g;
     let match;
     const links = [];
@@ -50,10 +51,12 @@ function App() {
       const linkPlaceholder = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${index}</a>`;
       parsedText = parsedText.replace(fullMatch, linkPlaceholder);
       index++;
+      console.log('Link found:', { linkText, linkUrl });
     }
 
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     parsedText = parsedText.replace(urlRegex, (url) => {
+      console.log('Parsed text:', parsedText);
       const linkPlaceholder = `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
       return linkPlaceholder;
     });
@@ -73,10 +76,18 @@ function App() {
     })
     .then(response => response.json())
     .then(data => {
-      if (data.web) {
+      if (typeof data.web === 'string') {
+        const { parsedText, links } = parseWebResults(data.web);
+        data.web = {
+          output: parsedText,
+          links: links
+        };
+      } else if (data.web && data.web.output) {
         const { parsedText, links } = parseWebResults(data.web.output);
         data.web.output = parsedText;
         data.web.links = links;
+      } else {
+        console.error('Unexpected format for web data:', data.web);
       }
       setResults({
         videos: data.videos ? [data.videos.output] : [],
@@ -93,12 +104,12 @@ function App() {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 bg-black text-white font-mono">
       <form onSubmit={performSearch} className="flex justify-center items-center mb-8">
         <input
           ref={inputRef}
           type="text"
-          className="border-2 border-gray-300 bg-white h-10 px-5 rounded-lg text-sm focus:outline-none"
+          className="border-2 border-gray-300 bg-black h-10 px-5 rounded-lg text-sm focus:outline-none"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search..."
@@ -106,8 +117,8 @@ function App() {
         />
         <button
           type="submit"
-          className="text-white font-bold py-2 px-4 rounded ml-2 text-lg font-libre" // Increased font size, added margin-left and font class
-          style={{ backgroundColor: '#ff7300' }} // Inline style for button color
+          className="text-black font-bold py-2 px-4 rounded ml-2 text-lg" // Increased font size, added margin-left and font class
+          style={{ backgroundColor: '#c7fe00' }} // Inline style for button color
         >
           Search
         </button>
@@ -126,7 +137,7 @@ function App() {
         <div className="w-full lg:w-1/2 px-4">
           {/* Web results */}
           <div className="mb-8"> {/* Existing margin-bottom */}
-            <h2 className="text-3xl font-bold mb-4 font-libre">Web</h2>
+            <h2 className="text-3xl font-bold mb-4">Web</h2>
             {/* need to change how the web output is rendered */}
             <div dangerouslySetInnerHTML={{ __html: results.web.output }} />
             <div className="grid grid-cols-2 gap-4 mb-16"> {/* Increased margin-bottom */}
@@ -140,7 +151,7 @@ function App() {
           {/* PDF results */}
           {typeof results.pdf === 'string' && results.pdf && (
             <div>
-              <h2 className="text-3xl font-bold mb-4 font-libre">PDF Search Results</h2>
+              <h2 className="text-3xl font-bold mb-4">PDF Search Results</h2>
               <div className="border p-2 rounded hover:bg-gray-100">
                 {results.pdf}
               </div>
@@ -149,7 +160,7 @@ function App() {
         </div>
         {/* Right column for Image results */}
           <div className="w-1/2 px-4">
-            <h2 className="text-3xl font-bold mb-4 font-libre">Images</h2> {/* Increased margin-bottom and font class */}
+            <h2 className="text-3xl font-bold mb-4">Images</h2> {/* Increased margin-bottom and font class */}
             <div className="grid grid-cols-2 gap-4">
               {results.images.map((item, index) => (
                 <div key={index} className="card mb-4"> {/* Added margin-bottom to cards */}
