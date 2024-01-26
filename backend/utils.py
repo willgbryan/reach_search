@@ -19,7 +19,7 @@ def send_request_to_gpt(
         prompt: str,
         context: Union[str, Dict[str, str]],  
         stream: bool = False
-        ) -> Any:
+        ) -> str:
     
     if isinstance(context, str):
         context = [{"role": "user", "content": context}]
