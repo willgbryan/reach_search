@@ -10,9 +10,10 @@ function App() {
     if (event.target.files.length) {
       const formData = new FormData();
       for (const file of event.target.files) {
-        formData.append('files', file);
+        const fileName = file.name.split('\\').pop().split('/').pop();
+        formData.append('files', file, fileName);
       }
-
+  
       fetch('http://localhost:8000/upload', {
         method: 'POST',
         body: formData
