@@ -12,10 +12,11 @@
 
 Before starting the application, you need to set up the necessary environment variables:
 
-1. `OPENAI_API_KEY`: This is your OpenAI API key used for making API requests.
-2. `SEARX_HOST`: This should be set to the URL of your Searx instance, which is "http://localhost:8080" by default.
+1. Open the backend.env file and update the following.
+2. `OPENAI_API_KEY`: This is your OpenAI API key used for making API requests.
+3. `SEARX_HOST`: This should be set to the URL of your Searx instance, which is "http://localhost:8080" by default.
 
-To set these environment variables:
+You can also set these environment variables via the command line:
 
 - On Windows:
 ```bash
@@ -31,48 +32,50 @@ export SEARX_HOST=http://localhost:8080
 
 Replace `your_openai_api_key_here` with your actual OpenAI API key.
 
-### Starting the SearXNG Engine Container
+### Using the Streamlit UI
 
-To use the SearXNG search engine with the application, you need to run it in a Docker container. Follow these steps to set up and start the SearXNG engine:
-
-1. Create a new directory for the SearXNG engine. It is recommended to create this directory outside of your application's directory to keep things organized:
+Simply run:
 
 ```bash
-mkdir SearXNG
-cd SearXNG
+streamlit run streamlit.py
 ```
 
-2. Run the following command to start the SearXNG container:
+### Starting the Application with Makefile
+
+Instead of starting each component separately, you can use the provided Makefile to build and run the backend, frontend, and SearXNG engine. Follow these steps:
+
+1. Open a terminal.
+2. Navigate to the repository's root directory.
+3. Run the following command to build and start all components:
 
 ```bash
-docker run --restart=unless-stopped --name="xng" -d -p 8080:8080 -v "${PWD}/searxng:/etc/searxng" -e "BASE_URL=http://localhost:8080/" -e "INSTANCE_NAME=xng" searxng/searxng
+make all
 ```
 
-This command will:
+This will execute the following:
 
-- Start a new Docker container named `xng`.
-- Restart the container unless it is explicitly stopped.
-- Bind the container's port `8080` to port `8080` on the host machine.
-- Create a volume that maps the `searxng` directory in the current working directory to `/etc/searxng` inside the container.
-- Set environment variables for `BASE_URL and INSTANCE_NAME`.
+- Build the Docker image for the backend service.
+- Build the Docker image for the frontend application.
+- Run the backend service in a Docker container.
+- Run the frontend application in a Docker container.
+- Set up and run the SearXNG engine in a Docker container.
 
-After running this command, the SearXNG engine should be accessible at `http://localhost:8080/`. Make sure this URL matches the `SEARX_HOST` environment variable set in the application configuration.
+To stop all running containers, you can use:
 
-### Starting the Application
+```bash
+make stop
+```
 
-#### Backend Setup
+To remove all containers, use:
 
-1. Navigate to the repository's root directory.
-2. Activate your virtual environment:
-   - On Windows: `.\venv\Scripts\activate`
-   - On macOS/Linux: `source venv/bin/activate`
-3. Install the required packages from `requirements.txt`:
-4. Navigate to the `reach_search/backend` directory.
-5. Start the backend service:
+```bash
+make clean
+```
 
-#### Frontend Setup
+To remove all Docker images, use:
 
-1. Open a new terminal.
-2. Navigate to the `reach_search/frontend/reach-search-app` directory.
-3. Install the necessary npm packages (if you haven't already):
-4. Start the frontend service with `npm start`:
+```bash
+make clean-images
+```
+
+Make sure you have Docker running on your machine before executing these commands.

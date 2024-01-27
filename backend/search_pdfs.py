@@ -114,7 +114,7 @@ class search_pdfs:
         query_embedding = self.get_embedding(self.prompt)
         results = collection.query(
             query_embeddings=[query_embedding],
-            n_results=5
+            n_results=10
         )
         
         context_friendly_results = json.dumps(results, default=str)

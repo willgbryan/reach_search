@@ -1,5 +1,5 @@
 .PHONY: all
-all: build-backend build-frontend run-backend run-frontend
+all: build-backend build-frontend run-backend run-frontend run-searxng
 
 .PHONY: build-backend
 build-backend:
@@ -16,6 +16,11 @@ run-backend:
 .PHONY: run-frontend
 run-frontend:
 	docker run -d -p 3000:3000 frontend-app
+
+.PHONY: run-searxng
+run-searxng:
+	mkdir -p SearXNG
+	docker run --restart=unless-stopped --name="xng" -d -p 8080:8080 -v "${PWD}/SearXNG:/etc/searxng" -e "BASE_URL=http://localhost:8080/" -e "INSTANCE_NAME=xng" searxng/searxng
 
 .PHONY: stop
 stop:
