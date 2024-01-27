@@ -32,15 +32,8 @@ export SEARX_HOST=http://localhost:8080
 
 Replace `your_openai_api_key_here` with your actual OpenAI API key.
 
-### Using the Streamlit UI
 
-Simply run:
-
-```bash
-streamlit run streamlit.py
-```
-
-### Starting the Application with Makefile
+### Starting the Application with Makefile (WIP)
 
 Instead of starting each component separately, you can use the provided Makefile to build and run the backend, frontend, and SearXNG engine. Follow these steps:
 
