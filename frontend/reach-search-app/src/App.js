@@ -170,7 +170,6 @@ function App() {
                       <img src={item.imageUrl} alt={`Search result ${index + 1}`} className="w-full" />
                       <div className="p-4">
                         <p className="text-gray-700 text-base">
-                          {item.linkText || `Image ${index + 1}`}
                         </p>
                       </div>
                     </div>
