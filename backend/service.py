@@ -6,8 +6,7 @@ from backend.videos import search_videos as search_videos
 from backend.images import search_images as search_images
 from backend.web import search_web as search_web
 from backend.search_pdfs import search_pdfs as search_pdfs
-from fastapi.staticfiles import StaticFiles
-from starlette.responses import FileResponse
+
 import logging
 from typing import List
 
@@ -17,7 +16,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -31,13 +30,16 @@ os.environ["SEARX_HOST"] = "http://localhost:8080"
 
 @app.post('/upload')
 async def upload_files(files: List[UploadFile] = File(...)):
+    upload_folder = app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_folder, exist_ok=True)
     uploaded_files = []
     for file in files:
         if file.filename.endswith('.pdf'):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file_path = os.path.join(upload_folder, file.filename)
             try:
                 with open(file_path, 'wb') as f:
-                    f.write(await file.read())
+                    content = await file.read()
+                    f.write(content)
                 uploaded_files.append(file.filename)
             except Exception as e:
                 logging.error(f'Error saving file: {e}')

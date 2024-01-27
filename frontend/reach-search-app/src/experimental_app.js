@@ -2,18 +2,19 @@ import React, { useState, useRef, useEffect } from 'react';
 
 function App() {
   const [query, setQuery] = useState('');
-  const inputRef = useRef(null);
   const [results, setResults] = useState({ videos: [], images: [], web: [] });
+  const [searchBoxes, setSearchBoxes] = useState([]);
+  const [globalResults, setGlobalResults] = useState({ videos: [], images: [], web: [] });
   const [isSearchComplete, setIsSearchComplete] = useState(false);
+  const inputRef = useRef(null);
 
   const handleFileChange = (event) => {
     if (event.target.files.length) {
       const formData = new FormData();
       for (const file of event.target.files) {
-        const fileName = file.name.split('\\').pop().split('/').pop();
-        formData.append('files', file, fileName);
+        formData.append('files', file);
       }
-  
+
       fetch('http://localhost:8000/upload', {
         method: 'POST',
         body: formData
@@ -39,8 +40,7 @@ function App() {
   }, [query]);
 
   const parseWebResults = (text) => {
-    text = text || '';
-    const linkRegex = /(?:\[(.*?)\]\((https?:\/\/.*?)\))/g;
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g;
     let match;
     const links = [];
     let index = 1;
@@ -49,18 +49,9 @@ function App() {
     while ((match = linkRegex.exec(text)) !== null) {
       const [fullMatch, linkText, linkUrl] = match;
       links.push({ linkText, linkUrl });
-      const linkPlaceholder = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${index}</a>`;
-      parsedText = parsedText.replace(fullMatch, linkPlaceholder);
+      parsedText = parsedText.replace(fullMatch, `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer">${index}</a>`);
       index++;
-      console.log('Link found:', { linkText, linkUrl });
     }
-
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    parsedText = parsedText.replace(urlRegex, (url) => {
-      console.log('Parsed text:', parsedText);
-      const linkPlaceholder = `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-      return linkPlaceholder;
-    });
 
     return { parsedText, links };
   };
@@ -77,22 +68,14 @@ function App() {
     })
     .then(response => response.json())
     .then(data => {
-      if (typeof data.web === 'string') {
-        const { parsedText, links } = parseWebResults(data.web);
-        data.web = {
-          output: parsedText,
-          links: links
-        };
-      } else if (data.web && data.web.output) {
+      if (data.web) {
         const { parsedText, links } = parseWebResults(data.web.output);
         data.web.output = parsedText;
         data.web.links = links;
-      } else {
-        console.error('Unexpected format for web data:', data.web);
       }
       setResults({
         videos: data.videos ? [data.videos.output] : [],
-        images: data.images ? data.images : [], 
+        images: data.images ? data.images : [], // Expecting objects with pageUrl and imageUrl
         web: data.web ? data.web : {},
         pdf: data.pdf || ""
       });
@@ -103,14 +86,67 @@ function App() {
       setIsSearchComplete(false);
     });
   };
+  const addSearchBox = (e) => {
+    console.log('Page clicked'); // Debugging line to check if the page is clicked
+    if (e.target === e.currentTarget) {
+      console.log('Adding search box'); // Debugging line to check if this code block is executed
+      const newBox = {
+        id: Date.now(),
+        x: e.clientX - 20, // Adjust as needed for styling
+        y: e.clientY - 10, // Adjust as needed for styling
+        query: '',
+        results: null
+      };
+      setSearchBoxes(searchBoxes.concat(newBox));
+    }
+  };
+
+  const updateQuery = (id, value) => {
+    setSearchBoxes(searchBoxes.map(box => box.id === id ? { ...box, query: value } : box));
+  };
+
+  const performDynamicSearch = (id, query) => {
+    // Similar to performSearch but updates the specific search box's results
+    fetch('http://localhost:8000/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ prompt: query })
+    })
+    .then(response => response.json())
+    .then(data => {
+      setSearchBoxes(searchBoxes.map(box => {
+        if (box.id === id) {
+          return { ...box, results: data };
+        }
+        return box;
+      }));
+      setIsSearchComplete(true);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      setIsSearchComplete(false);
+    });
+  };
+
+  const handleKeyDown = (e, id) => {
+    if (e.key === 'Enter') {
+      performDynamicSearch(id, e.target.value);
+    }
+  };
+
+  const removeSearchBox = (id) => {
+    setSearchBoxes(searchBoxes.filter(box => box.id !== id));
+  };
 
   return (
-    <div className="container mx-auto p-4 bg-black text-white font-mono">
+    <div className="container mx-auto p-4" onClick={addSearchBox} style={{ minHeight: '100vh' }}>
       <form onSubmit={performSearch} className="flex justify-center items-center mb-8">
         <input
           ref={inputRef}
           type="text"
-          className="border-2 border-gray-300 bg-black h-10 px-5 rounded-lg text-sm focus:outline-none"
+          className="border-2 border-gray-300 bg-white h-10 px-5 rounded-lg text-sm focus:outline-none"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search..."
@@ -118,8 +154,8 @@ function App() {
         />
         <button
           type="submit"
-          className="text-black font-bold py-2 px-4 rounded ml-2 text-lg" // Increased font size, added margin-left and font class
-          style={{ backgroundColor: '#c7fe00' }} // Inline style for button color
+          className="text-white font-bold py-2 px-4 rounded ml-2 text-lg font-libre" // Increased font size, added margin-left and font class
+          style={{ backgroundColor: '#ff7300' }} // Inline style for button color
         >
           Search
         </button>
@@ -132,13 +168,33 @@ function App() {
       className=" h-10 px-5 rounded-lg text-sm focus:outline-none my-2"
       />
       </form>
+      {/* Dynamic search boxes */}
+      {searchBoxes.map(box => (
+        <div key={box.id} style={{ position: 'absolute', left: box.x, top: box.y }}>
+          <input
+            type="text"
+            value={box.query}
+            onChange={(e) => updateQuery(box.id, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(e, box.id)}
+            placeholder="Type and press enter..."
+          />
+          <button onClick={() => removeSearchBox(box.id)}>X</button>
+          {box.results && (
+            <div>
+              {/* Render search results for this box */}
+              {/* You will need to adapt this part to match your data structure and desired UI */}
+              <div dangerouslySetInnerHTML={{ __html: box.results.web.output }} />
+            </div>
+          )}
+        </div>
+      ))}
       {isSearchComplete && (
       <div className="flex flex-wrap -mx-4">
         {/* Left column for Web and PDF results */}
         <div className="w-full lg:w-1/2 px-4">
           {/* Web results */}
           <div className="mb-8"> {/* Existing margin-bottom */}
-            <h2 className="text-3xl font-bold mb-4">Web</h2>
+            <h2 className="text-3xl font-bold mb-4 font-libre">Web</h2>
             {/* need to change how the web output is rendered */}
             <div dangerouslySetInnerHTML={{ __html: results.web.output }} />
             <div className="grid grid-cols-2 gap-4 mb-16"> {/* Increased margin-bottom */}
@@ -152,7 +208,7 @@ function App() {
           {/* PDF results */}
           {typeof results.pdf === 'string' && results.pdf && (
             <div>
-              <h2 className="text-3xl font-bold mb-4">PDF Search Results</h2>
+              <h2 className="text-3xl font-bold mb-4 font-libre">PDF Search Results</h2>
               <div className="border p-2 rounded hover:bg-gray-100">
                 {results.pdf}
               </div>
@@ -161,7 +217,7 @@ function App() {
         </div>
         {/* Right column for Image results */}
           <div className="w-1/2 px-4">
-            <h2 className="text-3xl font-bold mb-4">Images</h2> {/* Increased margin-bottom and font class */}
+            <h2 className="text-3xl font-bold mb-4 font-libre">Images</h2> {/* Increased margin-bottom and font class */}
             <div className="grid grid-cols-2 gap-4">
               {results.images.map((item, index) => (
                 <div key={index} className="card mb-4"> {/* Added margin-bottom to cards */}
