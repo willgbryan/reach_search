@@ -30,13 +30,16 @@ os.environ["SEARX_HOST"] = "http://localhost:8080"
 
 @app.post('/upload')
 async def upload_files(files: List[UploadFile] = File(...)):
+    upload_folder = app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_folder, exist_ok=True)
     uploaded_files = []
     for file in files:
         if file.filename.endswith('.pdf'):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file_path = os.path.join(upload_folder, file.filename)
             try:
                 with open(file_path, 'wb') as f:
-                    f.write(await file.read())
+                    content = await file.read()
+                    f.write(content)
                 uploaded_files.append(file.filename)
             except Exception as e:
                 logging.error(f'Error saving file: {e}')
