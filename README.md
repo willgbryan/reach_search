@@ -33,42 +33,45 @@ export SEARX_HOST=http://localhost:8080
 Replace `your_openai_api_key_here` with your actual OpenAI API key.
 
 
-### Starting the Application with Makefile (WIP)
+### Starting the Application with Docker (WIP)
 
-Instead of starting each component separately, you can use the provided Makefile to build and run the backend, frontend, and SearXNG engine. Follow these steps:
+Currently, (unfortunately) we need 3 separate containers to run this.
+
+Backend: 
 
 1. Open a terminal.
 2. Navigate to the repository's root directory.
-3. Run the following command to build and start all components:
+3. Run the following command:
 
 ```bash
-make all
+docker build --build-arg OPENAI_API_KEY=<your_api_key> -t backend-service .
 ```
 
-This will execute the following:
+Frontend:
 
-- Build the Docker image for the backend service.
-- Build the Docker image for the frontend application.
-- Run the backend service in a Docker container.
-- Run the frontend application in a Docker container.
-- Set up and run the SearXNG engine in a Docker container.
-
-To stop all running containers, you can use:
-
+1. Navigate to the frontend directory from the root of the repository.
 ```bash
-make stop
+cd frontend
+```
+2. Run the following command:
+```bash
+docker build -t frontend .
 ```
 
-To remove all containers, use:
+Engine:
 
+1. Navigate to the repository's root directory.
+2. Create a new directory to store the engine files.
 ```bash
-make clean
+mkdir searxng
 ```
-
-To remove all Docker images, use:
-
+3. Run the following command to allow `json` input formats to the engine. This modifies the settings.yml file, adding the `- json` to the formats section.
 ```bash
-make clean-images
+sed -i '/formats:/a \ \ - json' searxng\settings.yml
+```
+4. Run the following command to start the search engine:
+```bash
+docker run --restart=unless-stopped --name="xng" -d -p 8080:8080 -v "${PWD}/searxng:/etc/searxng" -e "BASE_URL=http://localhost:8080/" -e "INSTANCE_NAME=xng" searxng/searxng
 ```
 
 Make sure you have Docker running on your machine before executing these commands.
