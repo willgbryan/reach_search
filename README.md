@@ -11,8 +11,9 @@
 ### Starting the Application with Docker (WIP)
 
 Currently, (unfortunately) we need 3 separate containers to run this.
+Make sure you have Docker desktop running on your machine before executing these commands.
 
-Backend: 
+### Backend: 
 
 1. Open a terminal.
 2. Navigate to the repository's root directory.
@@ -21,24 +22,26 @@ Backend:
 ```bash
 docker build --build-arg OPENAI_API_KEY=<your_api_key> -t backend-service .
 ```
+4. Navigate to the 'Images' section of Docker desktop and run the container via the 'Actions' section.
 
-Engine:
+### Engine:
 
 1. Navigate to the repository's root directory.
 2. Create a new directory to store the engine files.
 ```bash
 mkdir searxng
 ```
-3. Run the following command to allow `json` input formats to the engine. This modifies the settings.yml file, adding the `- json` to the formats section.
-```bash
-sed -i '/formats:/a \ \ - json' searxng\settings.yml
-```
-4. Run the following command to start the search engine:
+3. Run the following command to start the search engine:
 ```bash
 docker run --restart=unless-stopped --name="xng" -d -p 8080:8080 -v "${PWD}/searxng:/etc/searxng" -e "BASE_URL=http://localhost:8080/" -e "INSTANCE_NAME=xng" searxng/searxng
 ```
+4. Run the following command to allow `json` input formats to the engine. This modifies the settings.yml file, adding the `- json` to the formats section.
+```bash
+sed -i '/formats:/a \ \ - json' searxng\settings.yml
+```
+5. Restart the `xng` container in the Docker desktop Actions section.
 
-Frontend:
+### Frontend:
 
 1. Navigate to the frontend directory from the root of the repository.
 ```bash
@@ -48,5 +51,4 @@ cd frontend
 ```bash
 docker build -t frontend .
 ```
-
-Make sure you have Docker running on your machine before executing these commands.
+3. Navigate to the 'Images' section of Docker desktop and run the container via the 'Actions' section.
