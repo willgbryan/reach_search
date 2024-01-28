@@ -4,7 +4,7 @@ from backend.images import search_images
 from backend.search_pdfs import search_pdfs
 import streamlit as st
 
-os.environ["OPENAI_API_KEY"] = "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"
+os.environ["OPENAI_API_KEY"] = "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"
 os.environ["SEARX_HOST"] = "http://localhost:8080"
 
 uploads_dir = 'uploads'

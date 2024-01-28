@@ -1,7 +1,7 @@
 import os
 import json
 from langchain import hub
-from .utils import send_request_to_gpt
+from utils import send_request_to_gpt
 # from langchain.agents import load_tools
 # from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_community.chat_models import ChatOpenAI

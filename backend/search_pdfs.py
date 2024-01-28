@@ -3,7 +3,7 @@ import json
 import chromadb
 import pandas as pd
 from openai import OpenAI
-from .utils import send_request_to_gpt
+from utils import send_request_to_gpt
 from langchain.document_loaders import PyPDFLoader
 
 
