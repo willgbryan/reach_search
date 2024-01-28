@@ -2,10 +2,10 @@ import os
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from backend.videos import search_videos as search_videos
-from backend.images import search_images as search_images
-from backend.web import search_web as search_web
-from backend.search_pdfs import search_pdfs as search_pdfs
+from videos import search_videos as search_videos
+from images import search_images as search_images
+from web import search_web as search_web
+from search_pdfs import search_pdfs as search_pdfs
 
 import logging
 from typing import List
@@ -25,8 +25,6 @@ app.add_middleware(
 app.config = {
     'UPLOAD_FOLDER': 'C:/Users/willb/OneDrive/Documents/GitHub/reach_search/uploads'
 }
-os.environ["OPENAI_API_KEY"] = ""
-os.environ["SEARX_HOST"] = "http://localhost:8080"
 
 @app.post('/upload')
 async def upload_files(files: List[UploadFile] = File(...)):
