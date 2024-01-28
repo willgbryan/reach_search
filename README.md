@@ -22,17 +22,6 @@ Backend:
 docker build --build-arg OPENAI_API_KEY=<your_api_key> -t backend-service .
 ```
 
-Frontend:
-
-1. Navigate to the frontend directory from the root of the repository.
-```bash
-cd frontend
-```
-2. Run the following command:
-```bash
-docker build -t frontend .
-```
-
 Engine:
 
 1. Navigate to the repository's root directory.
@@ -47,6 +36,17 @@ sed -i '/formats:/a \ \ - json' searxng\settings.yml
 4. Run the following command to start the search engine:
 ```bash
 docker run --restart=unless-stopped --name="xng" -d -p 8080:8080 -v "${PWD}/searxng:/etc/searxng" -e "BASE_URL=http://localhost:8080/" -e "INSTANCE_NAME=xng" searxng/searxng
+```
+
+Frontend:
+
+1. Navigate to the frontend directory from the root of the repository.
+```bash
+cd frontend
+```
+2. Run the following command:
+```bash
+docker build -t frontend .
 ```
 
 Make sure you have Docker running on your machine before executing these commands.
