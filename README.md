@@ -8,31 +8,6 @@
 2. Create an account during the installation process or via the Docker Hub website.
 3. Ensure that Docker Desktop is running on your machine to support the Docker daemon.
 
-### Configuring Environment Variables
-
-Before starting the application, you need to set up the necessary environment variables:
-
-1. Open the backend.env file and update the following.
-2. `OPENAI_API_KEY`: This is your OpenAI API key used for making API requests.
-3. `SEARX_HOST`: This should be set to the URL of your Searx instance, which is "http://localhost:8080" by default.
-
-You can also set these environment variables via the command line:
-
-- On Windows:
-```bash
-set OPENAI_API_KEY=your_openai_api_key_here
-set SEARX_HOST=http://localhost:8080
-```
-
-- On macOS/Linux:
-```bash
-export OPENAI_API_KEY=your_openai_api_key_here
-export SEARX_HOST=http://localhost:8080
-```
-
-Replace `your_openai_api_key_here` with your actual OpenAI API key.
-
-
 ### Starting the Application with Docker (WIP)
 
 Currently, (unfortunately) we need 3 separate containers to run this.
