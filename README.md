@@ -13,6 +13,11 @@
 Currently, (unfortunately) we need 3 separate containers to run this.
 Make sure you have Docker desktop running on your machine before executing these commands.
 
+You may need to run the following command in your terminal to run images via the command line:
+```bash
+docker login
+```
+
 ### Backend: 
 
 1. Open a terminal.
@@ -22,7 +27,10 @@ Make sure you have Docker desktop running on your machine before executing these
 ```bash
 docker build --build-arg OPENAI_API_KEY=<your_api_key> -t backend-service .
 ```
-4. Navigate to the 'Images' section of Docker desktop and run the container via the 'Actions' section.
+4. Run the following command:
+```bash
+docker run -p 8000:8000 backend-service
+```
 
 ### Engine:
 
@@ -51,4 +59,7 @@ cd frontend
 ```bash
 docker build -t frontend .
 ```
-3. Navigate to the 'Images' section of Docker desktop and run the container via the 'Actions' section.
+3. Run the following command:
+```bash
+docker run -p 3000:3000 frontend
+```
